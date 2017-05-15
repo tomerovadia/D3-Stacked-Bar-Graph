@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    
+        <meta charset="utf-8">
+        <title>U.S. Military Personnel Overseas</title>
+        <script type="text/javascript" src="d3/d3.v3.js"></script>
+
+        <style>
+            .axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+            
+        </style>
+        
+        
+    </head>
+    
+    <body>
+        <script type="text/javascript">
+
+        //Defines the margin sizes
+        var margin = {top: 80, right: 180, bottom: 60, left: 100},
+        
+        //Defines dimensions of the area containing the bars
+        w = 850,
+        h = 500;
+        
+        //Creates the SVG
+        svg = d3.select("body")
+            .append("svg")
+            .attr("width", w + margin.left + margin.right)
+            .attr("height", h + margin.top + margin.bottom);
+            
+         
+            
+      //Defines the dataset
+     d3.text("data.1.csv", "text/csv", function(text) {
+     var dataset = d3.csv.parseRows(text);
+     
+
+
+
+   
+    
+
+
+        
+       
+        
+        
+     // var dataset = [[100, 20, 30, 40, 60, 40, 20, 10, 5, 40], [50, 40, 90, 20, 15, 60, 12, 70, 5, 20], 
+     // [9, 45, 32, 2, 30, 78, 16, 89, 99, 27], [9, 45, 32, 2, 30, 78, 16, 89, 99, 27], [9, 45, 32, 2, 30, 78, 16, 89, 99, 27],
+     // [9, 45, 32, 2, 30, 78, 16, 89, 99, 27], [9, 45, 32, 2, 30, 78, 16, 89, 99, 27], [9, 45, 32, 2, 30, 78, 16, 89, 99, 27],
+     // [9, 45, 32, 2, 30, 78, 16, 89, 99, 120], [9, 45, 32, 2, 30, 78, 16, 89, 99, 27]];
+        
+
+        
+        //Calculates the maximum bar height
+        var barHeights = [];
+        var barHeightSample;
+        var maxBarHeight = 0;
+        
+        for(var j=1;j<dataset.length;j++){
+            barHeightSample = 0;
+            for (var i=0;i<dataset[j].length;i++){  
+
+              barHeightSample = barHeightSample + parseFloat(dataset[j][i]);
+            }
+        barHeights.push(barHeightSample);
+
+
+        }
+        for (var b=0;b<barHeights.length;b++){  
+            if (barHeights[b] > maxBarHeight){
+                maxBarHeight = barHeights[b];
+                
+            }
+        }     
+        
+        //Defines the scale conversion
+        var scale = d3.scale.linear()
+                .domain([0, maxBarHeight])
+                .range([0, h]);
+        
+        //Defines variables
+        var accumulatedHeight;
+        var datasetSum;
+        var dropDown;
+        var distanceFromLeft = margin.left;
+        var padding = 10;
+        var barWidth = w / (dataset.length-1) - padding;
+        
+        //Defines color palette
+        var color = ["#D6D6C2", "#0066FF", "#0000CC", "#FF3300", "#CC0066", "#CC9900", "#FF66CC", "#FFFF00", "#FF9933", "#666633", "#009900", "#000099", "#660066"];
+    
+
+        
+for (var a=1;a<dataset.length;a++)
+        {       
+        
+        accumulatedHeight = 0; //variable used to determine how far down an additional part of a bar needs to be
+        
+            
+        datasetSum = 0; //this entire paragraph is for calculating the white space above each bar: "dropDown"
+        for (var c=0;c<dataset[a].length;c++)
+        { 
+            datasetSum = datasetSum + parseFloat(dataset[a][c]);
+        }
+        dropDown = h + margin.top - scale(datasetSum);
+        
+        svg.append("g")
+          .selectAll("rect")
+          .data(dataset[a])
+          .enter()
+          .append("rect")
+          .attr("x", distanceFromLeft)
+          .attr("y", function(d, i){ //how far down the bar addition will be
+              if(i===0){ //if it's the first, just create it
+                 return scale(accumulatedHeight) + dropDown;
+              }
+              if(i>0){ //after the first, create it lower down
+                 accumulatedHeight += parseFloat(dataset[a][i-1]);
+                 return scale(accumulatedHeight) + dropDown;
+              }
+          })
+          .attr("width", barWidth)
+          .attr("height", function(d){ //height of bar part is simply the scaled datum
+              return scale(d);
+              })
+          .attr("fill", function(d,i){ //cycles through the colors defined above
+              if(i < color.length){
+
+                  return color[i];
+              }
+              if(i >= color.length && i < (color.length*2)){
+
+                  i -= color.length;
+
+                  return color[i];
+              }
+              if(i >= (color.length*2)){
+
+                  i -= color.length*2;
+
+                  return color[i];
+              }
+              
+          }
+          )
+        ;
+        distanceFromLeft += barWidth + padding;
+}
+
+
+//Create the legend
+
+
+i=0;
+var legendDropdown = 0;
+var legendBoxWidth = 15;
+var legendBoxHeight = 15;
+var legendPadding = 20;
+
+//Legend colors
+svg.append("g")
+          .selectAll("rect")
+          .data(dataset[0])
+          .enter()
+          .append("rect")
+          .attr("x", w + margin.left + margin.right*(1/10))
+          .attr("y", function(d, i){
+            return margin.top + i * (legendBoxHeight + legendPadding) + "px";
+              })
+          .attr("height", legendBoxHeight)
+          .attr("width", legendBoxWidth)
+          .attr("fill", function(d,i){ //cycles through the colors defined above
+              if(i < color.length){
+
+                  return color[i];
+              }
+              if(i >= color.length && i < (color.length*2)){
+
+                  i -= color.length;
+
+                  return color[i];
+              }
+              if(i >= (color.length*2)){
+
+                  i -= color.length*2;
+
+                  return color[i];
+              }
+          })
+          .append("text")
+          .text(2012)
+          .attr("y", 15)
+          .attr("x", 15);
+
+legendDropdown = 0;
+
+//Legend text
+svg.append("g").selectAll("text")
+          .data(dataset[0])
+          .enter()
+          .append("text")
+          .text(function(d) {
+             return d})
+          .attr("font-family", "sans-serif")
+          .attr("font-size", "11px")
+          .attr("x", w + margin.left + margin.right*(1/5))
+          .attr("y", function(d, i){
+            return margin.top + i * (legendBoxHeight + legendPadding) + 12 + "px";
+              })
+          ;
+
+
+
+
+
+//Create the axes
+
+//x-axis
+
+var xAxisScale = d3.scale.linear()
+                .domain([2003, 2012])
+                .range([0, w - margin.left*(2/3)]);
+
+var xAxis = d3.svg.axis()
+                  .scale(xAxisScale)
+                  .orient("bottom")
+                  .tickFormat(d3.format("Y"));
+                  
+                  
+svg.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(" + parseFloat(margin.left + 30) + "," + parseFloat(margin.top + h + 15) + ")")
+    .call(xAxis);
+
+//y-axis
+
+var yAxisScale = d3.scale.linear()
+                .domain([0, maxBarHeight])
+                .range([h, 0]);
+                
+
+var yAxis = d3.svg.axis()
+                  .scale(yAxisScale)
+                  .orient("left");
+                  
+svg.append("g")
+    .attr("class", "axis")
+    .attr("transform", "translate(" + 80 + "," + margin.top + ")")
+    .call(yAxis)
+    .selectAll("text");
+
+
+ //Title
+svg.append("text")
+    .text("U.S. Military Personnel Overseas")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "25px")
+    .attr("x", w/3 + margin.left/2)
+    .attr("y", 40);
+ 
+
+ 
+ 
+ 
+ 
+ 
+});
+        
+        
+            
+            
+            
+            
+        </script>
+        
+        <font face="timesnewroman" size=2>
+
+Source: <a href="http://siadapp.dmdc.osd.mil/personnel/MILITARY/miltop.htm">Defense Management Data Center, Office of the Secretary of Defense</a>
+<br>
+* Some deployment figures in some nations are classified, and are thus included in "Not Listed/Other." Afghanistan figures for 2003-4 are examples.
+
+        </font>
+        
+        
+    </body>
+</html>  
